@@ -1,5 +1,14 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { rewrite } from "./rewrite"
+import { appendFileSync } from "fs"
+import { homedir } from "os"
+
+const logPath = `${homedir()}/.config/opencode/openrtk.log`
+
+function logIntercepted(original: string, rewritten: string) {
+  const entry = `[${new Date().toISOString()}] ${original} → ${rewritten}\n`
+  appendFileSync(logPath, entry)
+}
 
 export const rtkPlugin: Plugin = async ({ $ }) => {
   // Check rtk is installed at plugin load time
@@ -23,6 +32,7 @@ export const rtkPlugin: Plugin = async ({ $ }) => {
       const command = (args as Record<string, unknown>).command
       const rewritten = rewrite(command)
       if (rewritten) {
+        logIntercepted(command, rewritten)
         ;(args as Record<string, unknown>).command = rewritten
       }
     },
